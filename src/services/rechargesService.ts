@@ -34,3 +34,12 @@ async function findCardById(cardId: number) {
 async function findEmployeeByIdAndCompany(employeeId: number, companyId: number) {
   await cards.validateEmployeeAndCompany(employeeId, companyId);
 }
+
+export async function getRechargesByCardId(cardId: number) {
+  return await repository.findByCardId(cardId);
+}
+
+export function getTotalRechargeAmount(recharges: repository.Recharge[]) {
+  let sum = recharges.reduce((prev, cur) => prev + cur.amount, 0);
+  return sum;
+}

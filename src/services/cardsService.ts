@@ -10,6 +10,8 @@ import * as repository from './../repositories/cardRepository.js';
 
 import * as company from './companyService.js';
 import * as employee from './employeeService.js';
+import * as recharge from './rechargesService.js';
+import * as payment from './paymentsService.js';
 
 dotenv.config();
 
@@ -67,6 +69,12 @@ export async function unblock (id: string, password: string) {
   verifyExpirationDateAndThrowError(card.expirationDate);
   isCardUnblockedAndFail(card.isBlocked);
   return await repository.update(cardId, { isBlocked: false });
+}
+
+export async function getTransactionsAndRechages(id: string) {
+  const cardId = parseInt(id); 
+  const result = getBalance(cardId);
+  return result;
 }
 
 async function validateInsertAndReturnCardHolderName(data: insertControllerType, apiKey: string) {
@@ -209,7 +217,7 @@ function getEncryptedPassword(password: string) {
   return bcrypt.hashSync(password, SALTROUNDS);
 }
 
-function validatePassword(hashedPassword: string, password: string) {
+export function validatePassword(hashedPassword: string, password: string) {
   const match = bcrypt.compareSync(hashedPassword, password);
   if (!match) {
     throw throwError.unauthorizedError('Invalid id and/or password');    
@@ -233,4 +241,26 @@ export async function validateEmployeeAndCompany(employeeId: number, companyId: 
   if (companyId !== employeeData.companyId) {
     throw throwError.notFoundError('Card not found');
   }
+}
+
+export function verifyCardIsBlocked(isBlocked: boolean) {
+  if (isBlocked) {
+    throw throwError.conflictError('Card is blocked');
+  }
+}
+
+export async function getBalance(cardId: number) {
+  const recharges = await recharge.getRechargesByCardId(cardId);
+  const rechargesAmount = recharge.getTotalRechargeAmount(recharges);
+
+  const transactions = await payment.getPaymentsByCardId(cardId);
+  const transactionsAmount = payment.getTotalPaymentAmount(transactions);
+
+  const result = {
+    balance: rechargesAmount - transactionsAmount,
+    recharges,
+    transactions
+  }
+
+  return result;
 }

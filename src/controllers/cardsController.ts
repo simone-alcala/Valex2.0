@@ -17,7 +17,9 @@ export async function activate(req: Request, res: Response) {
 }
 
 export async function getTransactions(req: Request, res: Response) {
-  res.sendStatus(200);
+  const { id } = req.params;
+  const result = await service.getTransactionsAndRechages(id);
+  res.status(200).send(result);
 }
 
 export async function block(req: Request, res: Response) {
