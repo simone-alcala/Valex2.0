@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import * as cards from './../controllers/cardsController.js';
+import * as controller from './../controllers/cardsController.js';
 import validateToken from '../middlewares/validateTokenMiddleware.js';
 import { idSchema } from './../schemas/idParamSchema.js';
 import * as schema from './../schemas/cardsSchema.js';
@@ -11,21 +11,21 @@ const cardsRouter = Router();
 cardsRouter.post('/cards'                 
   , validateToken
   , validateSchema.validateSchemaMiddleware(schema.insert)
-  , cards.insert);
+  , controller.insert);
 cardsRouter.put ('/cards/activate/:id'    
   , validateSchema.validateParamSchemaMiddleware(idSchema)
   , validateSchema.validateSchemaMiddleware(schema.activate)
-  , cards.activate);
+  , controller.activate);
 cardsRouter.put ('/cards/block/:id'       
   , validateSchema.validateParamSchemaMiddleware(idSchema)
   , validateSchema.validateSchemaMiddleware(schema.password)
-  , cards.block);
+  , controller.block);
 cardsRouter.put ('/cards/unblock/:id'     
   , validateSchema.validateParamSchemaMiddleware(idSchema)
   , validateSchema.validateSchemaMiddleware(schema.password)
-  , cards.unblock);
+  , controller.unblock);
 cardsRouter.get ('/cards/transactions/:id'
   , validateSchema.validateParamSchemaMiddleware(idSchema)
-  , cards.getTransactions);
+  , controller.getTransactions);
 
 export default cardsRouter;

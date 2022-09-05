@@ -119,7 +119,7 @@ async function getEmployee(employeeId: number) {
   return await employee.findById(employeeId);
 }
 
-async function getCardById(cardId: number) {
+export async function getCardById(cardId: number) {
   const card = await repository.findById(cardId);
   if (!card) {
     throw throwError.notFoundError('Card not found');
@@ -174,7 +174,7 @@ function decryptCvv(cvv: string) {
   return CRYPTR.decrypt(cvv);
 }
 
-function verifyExpirationDateAndThrowError(expirationDate: string) {
+export function verifyExpirationDateAndThrowError(expirationDate: string) {
   const { today, convertedExpirationDate } = getDates(expirationDate);
   if (today > convertedExpirationDate) {
     throw throwError.unauthorizedError('Card is expired');
@@ -190,6 +190,12 @@ function getDates(expirationDate: string) {
 function verifyCardIsNotActive(password: string) {
   if (password !== null) {
     throw throwError.unauthorizedError('Card is already activated');
+  }
+}
+
+export function verifyCardIstActive(password: string) {
+  if (password === null) {
+    throw throwError.unauthorizedError('Card is not activated');
   }
 }
 
@@ -219,5 +225,12 @@ function isCardBlockedAndFail(isBlocked: boolean) {
 function isCardUnblockedAndFail(isBlocked: boolean) {
   if (!isBlocked) {
     throw throwError.conflictError('Card already unblocked');
+  }
+}
+
+export async function validateEmployeeAndCompany(employeeId: number, companyId: number) {
+  const employeeData = await employee.findById(employeeId);
+  if (companyId !== employeeData.companyId) {
+    throw throwError.notFoundError('Card not found');
   }
 }
