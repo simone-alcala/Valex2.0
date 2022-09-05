@@ -207,8 +207,8 @@
 
     "/recharges/:id": {
       "post": {
-        "summary": "Create a new recharge for a card",
-        "description": "Create a new recharge for a card by card ID",
+        "summary": "Add a new recharge for a card",
+        "description": "Add a new recharge for a card by card ID",
         "security": [{ "APIKey": [] }],
         "parameters": [{
           "name": "x-api-key",
@@ -256,8 +256,8 @@
 
     "/payments/:id": {
       "post": {
-        "summary": "Create a new recharge for a card",
-        "description": "Create a new recharge for a card by card ID",
+        "summary": "Add a new transaction for a card",
+        "description": "Add a new transaction for a card by card ID",
         "security": [{ "APIKey": [] }],
         "parameters": [{
           "name": "id",
