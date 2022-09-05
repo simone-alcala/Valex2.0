@@ -1,0 +1,310 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Reimbursements API",
+    "description": "[ BaseUrl: http://localhost:5000 ]",
+    "version": "1.0.0"
+  },
+
+  "paths": {
+    
+    "/sign-up": {
+      "post": {
+        "summary": "Sign up",
+        "description": "Sign up to the system as non admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUp"
+              },
+              "examples": {
+                "SignUp": {
+                  "value": {
+                    "email": "user@test.com",
+                    "fullName": "User Name",
+                    "password": "1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "409": {
+            "description": "Email already registered"
+          },
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+
+    "/sign-in": {
+      "post": {
+        "summary": "Sign in",
+        "description": "Sign in to the system",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignIn"
+              },
+              "examples": {
+                "SignIn": {
+                  "value": {
+                    "email": "user@test.com",
+                    "password": "1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Invalid user/password or User is not active"
+          },
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                "type": "object",
+                  "$ref": "#/components/schemas/Token"                  
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/user": {
+      "post": {
+        "summary": "Create user",
+        "description": "Create new user",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{
+          "name": "token",
+          "in": "header",
+          "description": "Bearer token",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUser"
+              },
+              "examples": {
+                "NewUser": {
+                  "value": {
+                    "email": "user@user.com",
+                    "fullName": "user",
+                    "avatar": "http://www.google.com",
+                    "active": true,
+                    "isAdmin": true,
+                    "departmentId": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid token"
+          },
+          "401": {
+            "description": "Invalid token"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+
+    "/user/:id": {
+      "put": {
+        "summary": "Update user",
+        "description": "Update user by id",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "header",
+            "description": "Bearer token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }, 
+          {
+            "name": "id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUser"
+              },
+              "examples": {
+                "UpdateUser": {
+                  "value": {
+                    "email": "user@user.com",
+                    "fullName": "user",
+                    "password": "1234",
+                    "avatar": "http://www.google.com",
+                    "active": true,
+                    "isAdmin": true,
+                    "departmentId": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid token"
+          },
+          "401": {
+            "description": "Invalid token"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+
+
+  },
+  "components":{
+    "schemas": {
+      "SignUp": {
+        "type": "object",
+        "required": [
+          "email", 
+          "fullName", 
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "SignIn": {
+        "type": "object",
+        "required": [
+          "email", 
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateUser": {
+        "type": "object",
+        "required": [
+          "email", 
+          "fullName"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "departmentId": {
+            "type": "number"
+          }
+        }
+      },
+      "UpdateUser": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "departmentId": {
+            "type": "number"
+          }
+        }
+      },
+      "Token": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
