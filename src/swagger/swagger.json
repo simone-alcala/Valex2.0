@@ -1,101 +1,22 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Reimbursements API",
-    "description": "[ BaseUrl: http://localhost:5000 ]",
+    "title": "Valex API",
+    "description": "[ BaseUrl: https://driven-valex-2.herokuapp.com ]",
     "version": "1.0.0"
   },
 
   "paths": {
     
-    "/sign-up": {
+    "/cards": {
       "post": {
-        "summary": "Sign up",
-        "description": "Sign up to the system as non admin",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignUp"
-              },
-              "examples": {
-                "SignUp": {
-                  "value": {
-                    "email": "user@test.com",
-                    "fullName": "User Name",
-                    "password": "1234"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "409": {
-            "description": "Email already registered"
-          },
-          "422": {
-            "description": "Unprocessable entity"
-          },
-          "201": {
-            "description": "Created"
-          }
-        }
-      }
-    },
-
-    "/sign-in": {
-      "post": {
-        "summary": "Sign in",
-        "description": "Sign in to the system",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignIn"
-              },
-              "examples": {
-                "SignIn": {
-                  "value": {
-                    "email": "user@test.com",
-                    "password": "1234"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "401": {
-            "description": "Invalid user/password or User is not active"
-          },
-          "422": {
-            "description": "Unprocessable entity"
-          },
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                "type": "object",
-                  "$ref": "#/components/schemas/Token"                  
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/user": {
-      "post": {
-        "summary": "Create user",
-        "description": "Create new user",
-        "security": [{ "bearerAuth": [] }],
+        "summary": "Create a new card",
+        "description": "Create a new card for an employee",
+        "security": [{ "APIKey": [] }],
         "parameters": [{
-          "name": "token",
+          "name": "x-api-key",
           "in": "header",
-          "description": "Bearer token",
+          "description": "API Key",
           "required": true,
           "schema": {
             "type": "string"
@@ -105,17 +26,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateUser"
+                "$ref": "#/components/schemas/CreateCard"
               },
               "examples": {
-                "NewUser": {
+                "CreateCard": {
                   "value": {
-                    "email": "user@user.com",
-                    "fullName": "user",
-                    "avatar": "http://www.google.com",
-                    "active": true,
-                    "isAdmin": true,
-                    "departmentId": 1
+                    "employeeId": 1,
+                    "cardType": "education"
                   }
                 }
               }
@@ -123,15 +40,6 @@
           }
         },
         "responses": {
-          "400": {
-            "description": "Invalid token"
-          },
-          "401": {
-            "description": "Invalid token"
-          },
-          "409": {
-            "description": "Email already registered"
-          },
           "422": {
             "description": "Unprocessable entity"
           },
@@ -142,47 +50,30 @@
       }
     },
 
-    "/user/:id": {
+    "/cards/activate/:id": {
       "put": {
-        "summary": "Update user",
-        "description": "Update user by id",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "token",
-            "in": "header",
-            "description": "Bearer token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }, 
-          {
-            "name": "id",
-            "in": "path",
-            "description": "User id",
-            "required": true,
-            "schema": {
-              "type": "number"
-            }
+        "summary": "Activate a card",
+        "description": "Activate a card by its ID",
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
           }
-        ],
+        }],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateUser"
+                "$ref": "#/components/schemas/ActivateCard"
               },
               "examples": {
-                "UpdateUser": {
+                "ActivateCard": {
                   "value": {
-                    "email": "user@user.com",
-                    "fullName": "user",
-                    "password": "1234",
-                    "avatar": "http://www.google.com",
-                    "active": true,
-                    "isAdmin": true,
-                    "departmentId": 1
+                    "cvv": "123",
+                    "password": "1234"
                   }
                 }
               }
@@ -190,12 +81,86 @@
           }
         },
         "responses": {
-          "400": {
-            "description": "Invalid token"
+          "422": {
+            "description": "Unprocessable entity"
           },
-          "401": {
-            "description": "Invalid token"
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+
+    "/cards/block/:id": {
+      "put": {
+        "summary": "Block a card",
+        "description": "Block a card by its ID",
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockCard"
+              },
+              "examples": {
+                "BlockCard": {
+                  "value": {
+                    "password": "1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "422": {
+            "description": "Unprocessable entity"
           },
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+
+    "/cards/unblock/:id": {
+      "put": {
+        "summary": "Unblock a card",
+        "description": "Unblock a card by its ID",
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnblockCard"
+              },
+              "examples": {
+                "UnblockCard": {
+                  "value": {
+                    "password": "1234"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
           "409": {
             "description": "Email already registered"
           },
@@ -207,24 +172,157 @@
           }
         }
       }
-    }
+    },
 
+    "/cards/transactions/:id": {
+      "get": {
+        "summary": "Get balance and transactions",
+        "description": "Get balance and transactions (recharges and payments) by card ID",
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }],
+        "responses": {
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transactions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/recharges/:id": {
+      "post": {
+        "summary": "Create a new recharge for a card",
+        "description": "Create a new recharge for a card by card ID",
+        "security": [{ "APIKey": [] }],
+        "parameters": [{
+          "name": "x-api-key",
+          "in": "header",
+          "description": "API Key",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecharge"
+              },
+              "examples": {
+                "CreateRecharge": {
+                  "value": {
+                    "amount": 60000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+
+    "/payments/:id": {
+      "post": {
+        "summary": "Create a new recharge for a card",
+        "description": "Create a new recharge for a card by card ID",
+        "security": [{ "APIKey": [] }],
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "description": "Card ID",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePayment"
+              },
+              "examples": {
+                "CreatePayment": {
+                  "value": {
+                    "businessId": 1,
+                    "password": "1234",
+                    "amount": 60000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "422": {
+            "description": "Unprocessable entity"
+          },
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    }
 
   },
   "components":{
     "schemas": {
-      "SignUp": {
+      "CreateCard": {
         "type": "object",
         "required": [
-          "email", 
-          "fullName", 
+          "employeeId", 
+          "cardType"
+        ],
+        "properties": {
+          "employeeId": {
+            "type": "integer"
+          },
+          "cardType": {
+            "type": "education | health | groceries | restaurant | transport"
+          }
+        }
+      },
+      "ActivateCard": {
+        "type": "object",
+        "required": [
+          "cvv", 
           "password"
         ],
         "properties": {
-          "email": {
-            "type": "string"
-          },
-          "fullName": {
+          "cvv": {
             "type": "string"
           },
           "password": {
@@ -232,79 +330,129 @@
           }
         }
       },
-      "SignIn": {
+      "BlockCard": {
         "type": "object",
         "required": [
-          "email", 
           "password"
         ],
         "properties": {
-          "email": {
+          "password": {
             "type": "string"
+          }
+        }
+      },
+      "UnblockCard": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRecharge": {
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "properties": {
+          "amount": {
+            "type": "integer"
+          }
+        }
+      },
+      "CreatePayment": {
+        "type": "object",
+        "required": [
+          "amount",
+          "businessId",
+          "password"
+        ],
+        "properties": {
+          "amount": {
+            "type": "integer"
+          },
+          "businessId": {
+            "type": "integer"
           },
           "password": {
             "type": "string"
           }
         }
       },
-      "CreateUser": {
+      "Transactions": {
         "type": "object",
-        "required": [
-          "email", 
-          "fullName"
-        ],
         "properties": {
-          "email": {
-            "type": "string"
+          "balance": {
+            "type": "integer"
           },
-          "fullName": {
-            "type": "string"
+          "recharges" : {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recharges"
+            }
           },
-          "avatar": {
-            "type": "string"
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "isAdmin": {
-            "type": "boolean"
-          },
-          "departmentId": {
-            "type": "number"
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Payments"
+            }
           }
         }
       },
-      "UpdateUser": {
+      "APiKey": {
         "type": "object",
         "properties": {
-          "email": {
+          "x-api-key": {
             "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "avatar": {
-            "type": "string"
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "isAdmin": {
-            "type": "boolean"
-          },
-          "departmentId": {
-            "type": "number"
           }
         }
       },
-      "Token": {
+      "Recharges": {
         "type": "object",
         "properties": {
-          "token": {
+          "id": {
+            "type": "integer"
+          },
+          "cardId" : {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        }
+      },
+      "Payments": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "cardId" : {
+            "type": "integer"
+          },
+          "businessId" : {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "businessName": {
             "type": "string"
           }
         }
       }
+      
     }
   }
 }
