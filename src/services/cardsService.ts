@@ -22,11 +22,9 @@ export type insertControllerType = {
 }
 
 export type activateControllerType = {
-  cardId: string;
   cvv: string;
   password: string;
 }
-
 
 export async function insert(data: insertControllerType, apiKey: string ) {
 
@@ -48,11 +46,27 @@ export async function insert(data: insertControllerType, apiKey: string ) {
   return await repository.insert(newCard);
 }
 
-export async function activate(data: activateControllerType) {
-  const cardId = parseInt(data.cardId);
-  await validateActivateCard(cardId, data.cvv, data.password);
+export async function activate(id: string, data: activateControllerType) {
+  const cardId = parseInt(id);
+  await validateActivateCard(cardId, data.cvv);
   const password = getEncryptedPassword(data.password);
   return await repository.update(cardId, { password });
+}
+
+export async function block (id: string, password: string) {
+  const cardId = parseInt(id);
+  const card = await validateIdAndPassword(cardId, password);
+  verifyExpirationDateAndThrowError(card.expirationDate);
+  isCardBlockedAndFail(card.isBlocked);
+  return await repository.update(cardId, { isBlocked: true });
+}
+
+export async function unblock (id: string, password: string) {
+  const cardId = parseInt(id);
+  const card = await validateIdAndPassword(cardId, password);
+  verifyExpirationDateAndThrowError(card.expirationDate);
+  isCardUnblockedAndFail(card.isBlocked);
+  return await repository.update(cardId, { isBlocked: false });
 }
 
 async function validateInsertAndReturnCardHolderName(data: insertControllerType, apiKey: string) {
@@ -74,15 +88,27 @@ async function validateCompanyEmployeeAndReturnEmployee(apiKey: string, employee
 async function validateEmployeeCards(data: insertControllerType) {
   const card = await repository.findByTypeAndEmployeeId(data.cardType, data.employeeId); 
   if (card) {
-    throw throwError.conflictError('Card type already registered for employee');
+    const { today, convertedExpirationDate } = getDates(card.expirationDate);
+    if (today <= convertedExpirationDate) {
+      throw throwError.conflictError('Card type already registered for employee');
+    }
   }
 }
 
-async function validateActivateCard (cardId: number, cvv: string, password: string) {
+async function validateActivateCard (cardId: number, cvv: string) {
   const card = await getCardById(cardId);
-  verifyExpirationDate(card.expirationDate);
+  verifyExpirationDateAndThrowError(card.expirationDate);
   verifyCardIsNotActive(card.password);
-  validateCvv(card.securityCode);
+  validateCvv(cvv, card.securityCode);
+}
+
+async function validateIdAndPassword(cardId: number, password: string) {
+  const card = await repository.findById(cardId);
+  if (!card || card.password === null) {
+    throw throwError.unauthorizedError('Invalid id and/or password');
+  }
+  validatePassword (password, card.password);
+  return card;
 }
 
 async function getCompany(apiKey: string) {
@@ -95,7 +121,7 @@ async function getEmployee(employeeId: number) {
 
 async function getCardById(cardId: number) {
   const card = await repository.findById(cardId);
-  if (!cardId) {
+  if (!card) {
     throw throwError.notFoundError('Card not found');
   }
   return card;
@@ -144,16 +170,21 @@ function encryptCvv(cvv: string){
   return CRYPTR.encrypt(cvv);
 }
 
-function decryptCvv(cvv: string){
+function decryptCvv(cvv: string) {
   return CRYPTR.decrypt(cvv);
 }
 
-function verifyExpirationDate(expirationDate: string) {
-  const today = dayjs().format('YY/MM');
-  const convertedExpirationDate = expirationDate.split('/').reverse().join('/');
-  if (today > convertedExpirationDate){
+function verifyExpirationDateAndThrowError(expirationDate: string) {
+  const { today, convertedExpirationDate } = getDates(expirationDate);
+  if (today > convertedExpirationDate) {
     throw throwError.unauthorizedError('Card is expired');
   }
+}
+
+function getDates(expirationDate: string) {
+  const today = dayjs().format('YY/MM');
+  const convertedExpirationDate = expirationDate.split('/').reverse().join('/');
+  return { today, convertedExpirationDate };
 }
 
 function verifyCardIsNotActive(password: string) {
@@ -162,8 +193,8 @@ function verifyCardIsNotActive(password: string) {
   }
 }
 
-function validateCvv(cvv: string) {
-  if (cvv !== decryptCvv(cvv)) {
+function validateCvv(cvv: string, encryptedCvv: string) {
+  if (cvv !== decryptCvv(encryptedCvv)) {   
     throw throwError.unauthorizedError('Invalid CVV');
   }
 }
@@ -172,9 +203,21 @@ function getEncryptedPassword(password: string) {
   return bcrypt.hashSync(password, SALTROUNDS);
 }
 
-async function validatePassword(hashedPassword: string, password: string, ) {
-  const match = await bcrypt.compare(password, hashedPassword);
+function validatePassword(hashedPassword: string, password: string) {
+  const match = bcrypt.compareSync(hashedPassword, password);
   if (!match) {
-    throw throwError.unauthorizedError('Invalid user/password');    
+    throw throwError.unauthorizedError('Invalid id and/or password');    
+  }
+}
+
+function isCardBlockedAndFail(isBlocked: boolean) {
+  if (isBlocked) {
+    throw throwError.conflictError('Card already blocked');
+  }
+}
+
+function isCardUnblockedAndFail(isBlocked: boolean) {
+  if (!isBlocked) {
+    throw throwError.conflictError('Card already unblocked');
   }
 }
